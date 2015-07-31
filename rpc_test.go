@@ -1,41 +1,140 @@
 package goonep
 
-/*
-import "testing"
 
-var cik = "521c060dac5f1f4cee2f91ff0a01c7c064ac362b"
-func TestCallMulti(t *testing.T) {
-    var calls = []interface{}{
-        map[string]interface{}{
-            "id":        1,
-            "procedure": "info",
-            "arguments": []interface{}{
-                map[string]interface{}{
-                    "alias": "",
-                },
-                map[string]interface{}{},
-            },
-        },
-    }
-    _, err := CallMulti(cik, calls)
+import ( 
+    "testing"
+    "math/rand"
+    "time"
+    "runtime"
+    "strconv"
+)
 
+var cik = "PUTA40CHARACTERCIKHERE"
+var alias = "X1"
+var alias2 = "X2"
+
+func errorCheck(t *testing.T, body Response, err interface{}, line int) {
     if err != nil {
-        t.Errorf("Faild: %v", err)
+        t.Errorf("Failed: %v", err)
     }
-
+    if body.Results[0].Status == "invalid" {
+        t.Errorf("Failed: %v", "RPC status response was invalid on line " + strconv.Itoa(line+1))
+    }
+    if body.Results[0].Status == "badarg" {
+        t.Errorf("Failed: %v", "RPC status response was badarg on line " + strconv.Itoa(line+1))
+    }
 }
 
-func TestCall(t *testing.T) {
-    var procedure = "info"
-    var arguments = []interface{}{
-        map[string]interface{}{
-            "alias": "",
+func TestMain(t *testing.T) {
+    var rid1 Response
+    var rid2 Response
+    var rid1Body interface{}
+    var rid2Body interface{}
+    var body Response
+    var line int
+    var desc = map[string]interface{}{
+        "format": "integer",
+        "meta": "",
+        "name": "who is me",
+        "preprocess": []interface{}{},
+        "public": false,
+        "retention": map[string]interface{}{
+            "count": "infinity",
+            "duration": "infinity",
         },
-        map[string]interface{}{},
+        "subscribe": nil,
     }
-    _, err := Call(cik, procedure, arguments)
-    
+
+    // lookup rid of alias X1, if doesn't exist then create + map
+    rid1, err := lookup(cik, "alias", alias)
     if err != nil {
-        t.Errorf("Faild: %v", err)
+        t.Errorf("Failed: %v", err)
     }
-}*/
+    rid1Body = rid1.Results[0].Body
+    if rid1.Results[0].Status == "invalid" {
+        rid1, err = create(cik, "dataport", desc)
+        rid1Body = rid1.Results[0].Body
+        _, _, line, _ = runtime.Caller(0)
+        errorCheck(t, rid1, err, line)
+        body, err = oneMap(cik, rid1Body, alias)
+        _, _, line, _ = runtime.Caller(0)
+        errorCheck(t, body, err, line)
+    }
+
+    // lookup rid of alias X2, if doesn't exist then create + map
+    rid2, err = lookup(cik, "alias", alias2)
+    if err != nil {
+        t.Errorf("Failed: %v", err)
+    }
+    rid2Body = rid2.Results[0].Body
+    if rid2.Results[0].Status == "invalid" {
+        rid2, err = create(cik, "dataport", desc)
+        rid2Body = rid2.Results[0].Body
+        _, _, line, _ = runtime.Caller(0)
+        errorCheck(t, rid2, err, line)
+        body, err = oneMap(cik, rid2Body, alias2)
+        _, _, line, _ = runtime.Caller(0)
+        errorCheck(t, body, err, line)
+    }
+
+    // write data to dataport
+    rand.Seed(time.Now().Unix())
+    randomInt := rand.Intn(100 - 0) + 0
+    body, err = write(cik, rid1Body, randomInt)
+    _, _, line, _ = runtime.Caller(0)
+    errorCheck(t, body, err, line)
+
+    // read data from dataport
+    body, err = read(cik, rid1Body, map[string]interface{}{})
+    _, _, line, _ = runtime.Caller(0)
+    errorCheck(t, body, err, line)
+
+    // write group data
+    time.Sleep(1 * time.Second)
+    randomInt = rand.Intn(100 - 0) + 0
+    array1 := []interface{}{ rid1Body, randomInt }
+    array2 := []interface{}{ rid2Body, randomInt }
+    entries := []interface{}{ array1, array2 }
+
+    body, err = writegroup(cik, entries)
+    _, _, line, _ = runtime.Caller(0)
+    errorCheck(t, body, err, line)
+
+    // read data from dataports
+    body, err = read(cik, rid1Body, map[string]interface{}{})
+    _, _, line, _ = runtime.Caller(0)
+    errorCheck(t, body, err, line)
+
+    body, err = read(cik, rid2Body, map[string]interface{}{})
+    _, _, line, _ = runtime.Caller(0)
+    errorCheck(t, body, err, line)
+
+    // drop dataports
+    body, err = drop(cik, rid1Body)
+    _, _, line, _ = runtime.Caller(0)
+    errorCheck(t, body, err, line)
+
+    body, err = drop(cik, rid2Body)
+    _, _, line, _ = runtime.Caller(0)
+    errorCheck(t, body, err, line)
+
+    // list client's dataports
+    options := []interface{}{ "dataport" }
+    body, err = listing(cik, options)
+    _, _, line, _ = runtime.Caller(0)
+    errorCheck(t, body, err, line)
+
+    // get all mapping aliases information of dataports
+    // get resource id of device given key
+    var device1 Response
+    device1, err = lookup(cik, "alias", "")
+    _, _, line, _ = runtime.Caller(0)
+    errorCheck(t, device1, err, line)
+    deviceRID := device1.Results[0].Body
+    
+    // get the alias information of given device
+    option := map[string]interface{}{"aliases" : true}
+    body, err = info(cik, deviceRID, option)
+    _, _, line, _ = runtime.Caller(0)
+    errorCheck(t, body, err, line)
+}

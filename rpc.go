@@ -7,10 +7,10 @@ import (
     "encoding/json"
     "io/ioutil"
     "net/http"
-    //"log"
+    // "fmt"
 )
 
-var version = "0.1"
+var version = "0.2"
 var DomainKey = ""
 
 var InDev = false
@@ -33,7 +33,7 @@ type Result struct {
 }
 
 
-func Call(auth interface{}, procedure string, arguments []interface{}) (Response, error) {
+func Call(auth string, procedure string, arguments []interface{}) (Response, error) {
     var calls = []interface{}{
         map[string]interface{}{
             "id":        1,
@@ -60,12 +60,13 @@ func CallMulti(auth interface{}, calls []interface{}) (Response, error) {
     var requestBody = map[string]interface{}{
         "auth":  fullAuth,
         "calls": calls,
-    }
+    } 
+
 
     var serverUrl = ""
-    serverUrl = "https://" + ONEPHost + "/api:v1/rpc/process"
+    serverUrl = "https://" + ONEPHost + "/onep:v1/rpc/process"
     if InDev {
-        serverUrl = "https://m2-dev.exosite.com/api:v1/rpc/process"
+        serverUrl = "https://m2-dev.exosite.com/onep:v1/rpc/process"
     }
 
     buf, _ := json.Marshal(requestBody)
@@ -82,6 +83,7 @@ func CallMulti(auth interface{}, calls []interface{}) (Response, error) {
     resp, err := client.Do(req)
 
 
+
     if err != nil {
         return f, err
     }
@@ -93,17 +95,182 @@ func CallMulti(auth interface{}, calls []interface{}) (Response, error) {
         return f, err
     }
 
-
     err2 := json.Unmarshal(body, &(f.Results) )
     if err2 != nil {
         return f, err2
     }
 
-   // fmt.Printf("%v\n", f)
-   // b, err := json.MarshalIndent(f, "", "  ")
-   // fmt.Printf("%v\n", bytes.NewBuffer(b))
+    // uncomment to print response body (for debugging)
+    // fmt.Println()
+    // fmt.Println(string(body))
+    // fmt.Println()
+    // fmt.Println()
+    // fmt.Println()
+
+    // log.Printf("%v\n", f)
+    // b, err := json.MarshalIndent(f, "", "  ")
+    // log.Printf("%v\n", bytes.NewBuffer(b))
 
     // TODO: RPC error checking
 
     return f, nil
+}
+
+func activate(auth string, codetype string, code string) (Response, error) {
+    var arguments = []interface{}{
+        codetype,
+        code,
+    }
+    return Call(auth, "activate", arguments)
+}
+
+func create(auth string, ttype string, desc interface{}) (Response, error) {
+    var arguments = []interface{}{
+        ttype,
+        desc,
+    }
+    return Call(auth, "create", arguments)
+}
+
+func deactivate(auth string, codetype string, code string) (Response, error) {
+    var arguments = []interface{}{
+        codetype,
+        code,
+    }
+    return Call(auth, "deactivate", arguments)
+}
+
+func drop(auth string, rid interface{}) (Response, error) {
+    var arguments = []interface{}{
+        rid,
+    }
+    return Call(auth, "drop", arguments)
+}
+
+func flush(auth string, rid interface{}) (Response, error) {
+    var arguments = []interface{}{
+        rid,
+    }
+    return Call(auth, "flush", arguments)
+}
+
+func info(auth string, rid interface{}, options interface{}) (Response, error) {
+    var arguments = []interface{}{
+        rid,
+        options,
+    }
+    return Call(auth, "info", arguments)
+}
+
+func listing(auth string, types interface{}) (Response, error) {
+    var arguments = []interface{}{
+        types,
+    }
+    return Call(auth, "listing", arguments)
+}
+
+func lookup(auth string, ttype string, alias string) (Response, error) {
+    var arguments = []interface{}{
+        ttype,
+        alias,
+    }
+    return Call(auth, "lookup", arguments)
+}
+
+func oneMap(auth string, rid interface{}, alias string) (Response, error) {
+    var arguments = []interface{}{
+        "alias",
+        rid,
+        alias,
+    }
+    return Call(auth, "map", arguments)
+}
+
+func read(auth string, rid interface{}, options interface{}) (Response, error) {
+    var arguments = []interface{}{
+        rid,
+        options,
+    }
+    return Call(auth, "read", arguments)
+}
+
+func record(auth string, rid interface{}, entries interface{}, options interface{}) (Response, error) {
+    var arguments = []interface{}{
+        rid,
+        entries,
+        options,
+    }
+    return Call(auth, "record", arguments)
+}
+
+func recordbatch(auth string, rid interface{}, entries interface{}) (Response, error) {
+    var arguments = []interface{}{
+        rid,
+        entries,
+    }
+    return Call(auth, "recordbatch", arguments)
+}
+
+func revoke(auth string, codetype string, code string) (Response, error) {
+    var arguments = []interface{}{
+        codetype,
+        code,
+    }
+    return Call(auth, "revoke", arguments)
+}
+
+func share(auth string, rid interface{}, options interface{}) (Response, error) {
+    var arguments = []interface{}{
+        rid,
+        options,
+    }
+    return Call(auth, "share", arguments)
+}
+
+func unmap(auth string, alias string) (Response, error) {
+    var arguments = []interface{}{
+        "alias",
+        alias,
+    }
+    return Call(auth, "unmap", arguments)
+}
+
+func update(auth string, rid interface{}, desc interface{}) (Response, error) {
+    var arguments = []interface{}{
+        rid,
+        desc,
+    }
+    return Call(auth, "update", arguments)
+}
+
+func usage(auth string, rid interface{}, metric string, starttime int, endtime string) (Response, error) {
+    var arguments = []interface{}{
+        rid,
+        metric,
+        starttime,
+        endtime,
+    }
+    return Call(auth, "usage", arguments)
+}
+
+func wait(auth string, rid interface{}) (Response, error) {
+    var arguments = []interface{}{
+        rid,
+    }
+    return Call(auth, "wait", arguments)
+}
+
+func write(auth string, rid interface{}, value interface{}) (Response, error) {
+    var arguments = []interface{}{
+        rid,
+        value,
+    }
+    return Call(auth, "write", arguments)
+}
+
+func writegroup(auth string, entries interface{}) (Response, error) {
+    var arguments = []interface{}{
+        entries,
+    }
+    return Call(auth, "writegroup", arguments)
 }
