@@ -8,9 +8,13 @@ License is BSD, Copyright 2015, Exosite LLC (see LICENSE file)
 Quick Start
 ========================================
 1.) [Install Go](http://golang.org/doc/install) on your system
+
 2.) Set up your workspace in the [manner described in the Go documentation](https://golang.org/doc/code.html#Workspaces)
+
 3.) Clone this repository to the src/github.com/exosite-labs/goonep directory in your Go workspace
+
 4.) Once you've set up your workspace and set your GOPATH, run the command `go get github.com/stretchr/testify/assert` to install a library goonep uses in testing
+
 
 
 Getting A CIK
