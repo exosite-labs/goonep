@@ -1,5 +1,5 @@
 // Go library for the OnePlatform Provisioning API
-// https://github.com/exosite/docs/blob/master/provision/management.md
+// http://docs.exosite.com/provision/
 package goonep
 
 import (
@@ -10,6 +10,8 @@ import (
     "regexp"
     "time"
     "strconv"
+    "fmt"
+    // "net/http/httputil"
 )
 
 var VendorToken = ""
@@ -42,6 +44,7 @@ type ProvModel struct {
 
     managebycik         bool
     managebysharecode   bool
+    url                 string
 }
 
 func (m *ProvModel) GetPath() string {
@@ -154,13 +157,24 @@ func ProvCall(path, key, data, method string, managebycik bool, extra_headers ht
     client := &http.Client{}
 
     var serverUrl = ""
-    serverUrl = "https://" + ONEPHost + "/provision/"
-    if InDev {
-        serverUrl = "https://m2-dev.exosite.com/provision/"
-    }
+    serverUrl = "http://m2.exosite.com"
 
-    req, _ := http.NewRequest(method, serverUrl + path, nil)            
-    req.Header.Add("X-Exosite-Token", key)
+    fmt.Printf(serverUrl+path+ "\n\n")
+    req, _ := http.NewRequest(method, serverUrl + path, strings.NewReader(data))
+    req.Header = extra_headers     
+    if managebycik {
+        req.Header.Add("X-Exosite-CIK", key)
+    } else {
+        req.Header.Add("X-Exosite-Token", key)
+    }
+    if method == "POST" {
+        req.Header.Add("Content-Type", "application/x-www-form-urlencoded; charset=utf-8")
+    }
+    req.Header.Add("Accept", "text/plain, text/csv, application/x-www-form-urlencoded")
+
+    // uncomment to print request (for debugging)
+    // reqdump, _ := httputil.DumpRequestOut(req, true)
+    // fmt.Printf("\r\n\r\n" + string(reqdump) + "\r\n\r\n")
 
     resp, err := client.Do(req)
 

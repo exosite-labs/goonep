@@ -1,5 +1,5 @@
 // Go library for the OnePlatform RPC
-// https://github.com/exosite/api/tree/master/rpc
+// http://docs.exosite.com/rpc/
 package goonep
 
 import (
