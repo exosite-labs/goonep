@@ -1,5 +1,17 @@
 About goonep
 ============
+goonep is a Go bingding for Exosite One Platform API. The API is exponed over HTTPin a JSON RPC style interface. 
+
+License is BSD, Copyright 2015, Exosite LLC (see LICENSE file)
+
+========================================
+Quick Start
+========================================
+1.) [Install Go](http://golang.org/doc/install) on your system
+2.) Set up your workspace in the [manner described in the Go documentation](https://golang.org/doc/code.html#Workspaces)
+3.) Clone this repository to the src/github.com/exosite-labs/goonep directory in your Go workspace
+4.) Once you've set up your workspace and set your GOPATH, run the command `go get github.com/stretchr/testify/assert` to install a library goonep uses in testing
+
 
 Getting A CIK
 -------------
@@ -16,7 +28,7 @@ community portal, here's how you can find a CIK:
 
 4.) The device's CIK is displayed on the left
 
-Once you have a CIK, you can substitute it in the examples below. Note that any functions that take a parameter called `auth` can take a string CIK directly, or you can pass an auth dictionary as described [here](http://docs.exosite.com/rpc/#authentication).
+Once you have a CIK, you can substitute it in the tests. Note that any functions that take a parameter called `auth` can take a string CIK directly.
 
 
 General API Information
@@ -35,4 +47,4 @@ time.
 
 The API is documented here:
 
-https://github.com/exosite/docs/tree/master/data
+http://docs.exosite.com/http/
