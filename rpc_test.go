@@ -13,6 +13,7 @@ var cik = "PUTA40CHARACTERCIKHERE"
 var alias = "X1"
 var alias2 = "X2"
 
+// errorCheckRPC checks for RPC API HTTP errors
 func errorCheckRPC(t *testing.T, body Response, err interface{}, line int) {
     if err != nil {
         t.Errorf("Failed: %v", err)

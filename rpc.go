@@ -32,7 +32,7 @@ type Result struct {
     } `json:"error",omitempty`
 }
 
-
+// Call is a helper function that carries out HTTP requests for RPC API calls
 func Call(auth string, procedure string, arguments []interface{}) (Response, error) {
     var calls = []interface{}{
         map[string]interface{}{
@@ -116,6 +116,8 @@ func CallMulti(auth interface{}, calls []interface{}) (Response, error) {
     return f, nil
 }
 
+// the following functions implement the RPC APIs their names correspond to
+
 func activate(auth string, codetype string, code string) (Response, error) {
     var arguments = []interface{}{
         codetype,
@@ -177,6 +179,7 @@ func lookup(auth string, ttype string, alias string) (Response, error) {
     return Call(auth, "lookup", arguments)
 }
 
+// oneMap implements the map RPC (name difference due to naming conflict)
 func oneMap(auth string, rid interface{}, alias string) (Response, error) {
     var arguments = []interface{}{
         "alias",

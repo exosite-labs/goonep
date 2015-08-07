@@ -51,6 +51,7 @@ func (m *ProvModel) GetPath() string {
     return "manage/model"
 }
 
+// Find is a helper function for finding model with characteristics contained in string argument
 func (m *ProvModel) Find(modelName, id string) ProvModel {
 
     if Pool.Models[id] != nil {
@@ -153,6 +154,7 @@ type ProvRestModel interface {
 
 }
 
+// ProvCall is a helper function that carries out HTTP requests for Provisioning API calls
 func ProvCall(path, key, data, method string, managebycik bool, extra_headers http.Header) (interface{}, error) {
     client := &http.Client{}
 
@@ -192,6 +194,7 @@ func ProvCall(path, key, data, method string, managebycik bool, extra_headers ht
     return body, nil
 }
 
+// content_create implements POST to /provision/manage/content/<MODEL>/
 func content_create(provModel ProvModel, key, model, contentid, meta string, protect bool) (interface{}, error) {
     var data = "id=" + contentid + "&meta=" + meta
     if protect != false {
@@ -202,6 +205,7 @@ func content_create(provModel ProvModel, key, model, contentid, meta string, pro
     return ProvCall(path, key, data, "POST", provModel.managebycik, headers)
 }
 
+// content_download implements GET to /provision/download
 func content_download(provModel ProvModel, cik, vendor, model, contentid string) (interface{}, error) {
     var data = "vendor=" + vendor + "&model=" + model + "&id=" + contentid
     var headers = http.Header{}
@@ -209,6 +213,8 @@ func content_download(provModel ProvModel, cik, vendor, model, contentid string)
     return ProvCall(PROVISION_DOWNLOAD, cik, data, "GET", provModel.managebycik, headers)
 }
 
+// content_info implements GET to /provision/manage/content/<MODEL>/<CONTENT_ID>
+// or GET to /provision/download
 func content_info(provModel ProvModel, key, model, contentid, vendor string) (interface{}, error) {
     var headers = http.Header{}
     if vendor == "" {
@@ -220,18 +226,21 @@ func content_info(provModel ProvModel, key, model, contentid, vendor string) (in
     }
 }
 
+// content_list implements GET to /provision/manage/content/<MODEL>/
 func content_list(provModel ProvModel, key, model string) (interface{}, error) {
     var path = PROVISION_MANAGE_CONTENT + model + "/"
     var headers = http.Header{}
     return ProvCall(path, key, "", "GET", provModel.managebycik, headers)
 }
 
+// content_remove implements DELETE to /provision/manage/content/<MODEL>/<CONTENT_ID>
 func content_remove(provModel ProvModel, key, model, contentid string) (interface{}, error) {
     var headers = http.Header{}
     var path = PROVISION_MANAGE_CONTENT + model + "/" + contentid
     return ProvCall(path, key, "", "DELETE", provModel.managebycik, headers)
 }
 
+// content_upload implements POST to /provision/manage/content/<MODEL>/<CONTENT_ID>
 func content_upload(provModel ProvModel, key, model, contentid, data, mimetype string) (interface{}, error) {
     var headers = http.Header{}
     headers.Add("Content-Type", mimetype)
@@ -239,6 +248,7 @@ func content_upload(provModel ProvModel, key, model, contentid, data, mimetype s
     return ProvCall(path, key, data, "POST", provModel.managebycik, headers)
 }
 
+// model_create implements POST to /provision/manage/model/
 func model_create(provModel ProvModel, key, model, sharecode string, aliases, comments, historical bool) (interface{}, error) {
     var headers = http.Header{}
     var data = "model=" + model
@@ -259,16 +269,19 @@ func model_create(provModel ProvModel, key, model, sharecode string, aliases, co
     return ProvCall(PROVISION_MANAGE_MODEL, key, data, "POST", provModel.managebycik, headers)
 }
 
+// model_info implements GET to provision/manage/model/<MODEL>
 func model_info(provModel ProvModel, key, model string) (interface{}, error) {
     var headers = http.Header{}
     return ProvCall(PROVISION_MANAGE_MODEL + model, key, "", "GET", provModel.managebycik, headers)
 }
 
+// model_list implements GET to /provision/manage/model/
 func model_list(provModel ProvModel, key string) (interface{}, error) {
     var headers = http.Header{}
     return ProvCall(PROVISION_MANAGE_MODEL, key, "", "GET", provModel.managebycik, headers)
 }
 
+// model_remove implements DELETE to /provision/manage/model/<MODEL>
 func model_remove(provModel ProvModel, key, model string) (interface{}, error) {
     var headers = http.Header{}
     var data = "delete=true&model=" + model + "&confirm=true"
@@ -276,6 +289,7 @@ func model_remove(provModel ProvModel, key, model string) (interface{}, error) {
     return ProvCall(path, key, data, "DELETE", provModel.managebycik, headers)
 }
 
+// model_update implements PUT to /provision/manage/model/<MODEL>
 func model_update(provModel ProvModel, key, model, clonerid string, aliases, comments, historical bool) (interface{}, error) {
     var headers = http.Header{}
     var data = "rid=" + clonerid
@@ -283,12 +297,14 @@ func model_update(provModel ProvModel, key, model, clonerid string, aliases, com
     return ProvCall(path, key, data, "PUT", provModel.managebycik, headers)
 }
 
+// serialnumber_activate implements POST to /provision/activate
 func serialnumber_activate(provModel ProvModel, model, serialnumber, vendor string) (interface{}, error) {
     var headers = http.Header{}
     var data = "vendor=" + vendor + "&model=" + model + "&sn=" + serialnumber
     return ProvCall(PROVISION_ACTIVATE, "", data, "POST", provModel.managebycik, headers)
 }
 
+// serialnumber_add implements POST to /provision/manage/model/<MODEL>/
 func serialnumber_add(provModel ProvModel, key, model, sn string) (interface{}, error) {
     var headers = http.Header{}
     var data = "add=true&sn=" + sn
@@ -296,6 +312,7 @@ func serialnumber_add(provModel ProvModel, key, model, sn string) (interface{}, 
     return ProvCall(path, key, data, "POST", provModel.managebycik, headers)
 }
 
+// serialnumber_add_batch implements POST to /provision/manage/model/<MODEL>/
 func serialnumber_add_batch(provModel ProvModel, key, model string, sns []string) (interface{}, error) {
     var headers = http.Header{}
     var data = "add=true"
@@ -306,6 +323,7 @@ func serialnumber_add_batch(provModel ProvModel, key, model string, sns []string
     return ProvCall(path, key, data, "POST", provModel.managebycik, headers)
 }
 
+// serialnumber_disable implements POST to /provision/manage/model/<MODEL>/<SN>
 func serialnumber_disable(provModel ProvModel, key, model, serialnumber string) (interface{}, error) {
     var headers = http.Header{}
     var data = "disable=true"
@@ -313,6 +331,7 @@ func serialnumber_disable(provModel ProvModel, key, model, serialnumber string) 
     return ProvCall(path, key, data, "POST", provModel.managebycik, headers)
 }
 
+// serialnumber_enable implements POST to /provision/manage/model/<MODEL>/<SN>
 func serialnumber_enable(provModel ProvModel, key, model, serialnumber, owner string) (interface{}, error) {
     var headers = http.Header{}
     var data = "enable=true&owner=" + owner
@@ -320,12 +339,14 @@ func serialnumber_enable(provModel ProvModel, key, model, serialnumber, owner st
     return ProvCall(path, key, data, "POST", provModel.managebycik, headers)
 }
 
+// serialnumber_info implements GET to /provision/manage/model/<MODEL>/<SN>
 func serialnumber_info(provModel ProvModel, key, model, serialnumber string) (interface{}, error) {
     var headers = http.Header{}
     var path = PROVISION_MANAGE_MODEL + model + "/" + serialnumber
     return ProvCall(path, key, "", "GET", provModel.managebycik, headers)
 }
 
+// serialnumber_list implements GET to /provision/manage/model/<MODEL>/
 func serialnumber_list(provModel ProvModel, key, model string, offset, limit int) (interface{}, error) {
     var headers = http.Header{}
     var data = "offset=" + strconv.Itoa(offset) + "&limit=" + strconv.Itoa(limit)
@@ -333,6 +354,7 @@ func serialnumber_list(provModel ProvModel, key, model string, offset, limit int
     return ProvCall(path, key, data, "GET", provModel.managebycik, headers)
 }
 
+// serialnumber_reenable implements POST to /provision/manage/model/<MODEL>/<SN>
 func serialnumber_reenable(provModel ProvModel, key, model, serialnumber string) (interface{}, error) {
     var headers = http.Header{}
     var data = "enable=true"
@@ -340,6 +362,7 @@ func serialnumber_reenable(provModel ProvModel, key, model, serialnumber string)
     return ProvCall(path, key, data, "POST", provModel.managebycik, headers)
 }
 
+// serialnumber_remap implements POST to /provision/manage/model/<MODEL>/<SN>
 func serialnumber_remap(provModel ProvModel, key, model, serialnumber, oldsn string) (interface{}, error) {
     var headers = http.Header{}
     var data = "enable=true&oldsn=" + oldsn
@@ -347,12 +370,14 @@ func serialnumber_remap(provModel ProvModel, key, model, serialnumber, oldsn str
     return ProvCall(path, key, data, "POST", provModel.managebycik, headers)
 }
 
+// serialnumber_remove implements DELETE to /provision/manage/model/<MODEL>/<SN>
 func serialnumber_remove(provModel ProvModel, key, model, serialnumber string) (interface{}, error) {
     var headers = http.Header{}
     var path = PROVISION_MANAGE_MODEL + model + "/" + serialnumber
     return ProvCall(path, key, "", "DELETE", provModel.managebycik, headers)
 }
 
+// serialnumber_remove_batch implements POST to /provision/manage/model/<MODEL>/
 func serialnumber_remove_batch(provModel ProvModel, key, model string, sns []string) (interface{}, error) {
     var headers = http.Header{}
     var data = "remove=true"
@@ -363,17 +388,20 @@ func serialnumber_remove_batch(provModel ProvModel, key, model string, sns []str
     return ProvCall(path, key, data, "POST", provModel.managebycik, headers)
 }
 
+// vendor_register implements POST to /provision/register
 func vendor_register(provModel ProvModel, key, vendor string) (interface{}, error) {
     var headers = http.Header{}
     var data = "vendor=" + vendor
     return ProvCall(PROVISION_REGISTER, key, data, "POST", provModel.managebycik, headers)
 }
 
+// vendor_show implements GET to /provision/register
 func vendor_show(key string) (interface{}, error) {
     var headers = http.Header{}
     return ProvCall(PROVISION_REGISTER, key, "", "GET", false, headers)
 }
 
+// vendor_unregister implements POST to /provision/register
 func vendor_unregister(key, vendor string) (interface{}, error) {
     var headers = http.Header{}
     var data = "delete=true&vendor=" + vendor

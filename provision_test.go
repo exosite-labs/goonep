@@ -34,6 +34,8 @@ var portalcik = "PORTALCIKHERE"
 
 }*/
 
+
+// errorCheckProvision checks for provisioning API HTTP errors
 func errorCheckProvision(t *testing.T, body string, err interface{}, line int) {
     if err != nil {
         t.Errorf("Failed: %v", err)
@@ -117,7 +119,6 @@ func TestMainProvision(t *testing.T) {
     _, _, line, _ = runtime.Caller(0)
     errorCheckProvision(t, string(body.([]byte)), err, line)
 
-   	fmt.Printf("serialnumber_enable() \r\n")
    	body, err = serialnumber_enable(provModel, vendortoken, model, sn1, portalridBody.(string))
    	fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
     _, _, line, _ = runtime.Caller(0)
