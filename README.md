@@ -1,6 +1,6 @@
 About goonep
 ============
-goonep is a Go bingding for Exosite One Platform API. The API is exponed over HTTPin a JSON RPC style interface. 
+goonep is a Go binding for Exosite One Platform API. The API is exposed over HTTP in a JSON RPC style interface. 
 
 License is BSD, Copyright 2015, Exosite LLC (see LICENSE file)
 
