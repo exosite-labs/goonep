@@ -76,7 +76,7 @@ func TestMainProvision(t *testing.T) {
     provModel := ProvModel{
     	managebycik: false,
     	managebysharecode: true,
-    	url: "http://m2.exosite.com",
+    	url: "https://m2.exosite.com",
     }
     body, err := model_create(provModel, vendortoken, model, sharecodeBody.(string), false, true, true)
     fmt.Printf(string(body.([]byte)) + "\r\n\r\n")

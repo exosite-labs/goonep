@@ -159,7 +159,7 @@ func ProvCall(path, key, data, method string, managebycik bool, extra_headers ht
     client := &http.Client{}
 
     var serverUrl = ""
-    serverUrl = "http://m2.exosite.com"
+    serverUrl = "https://m2.exosite.com"
 
     fmt.Printf(serverUrl+path+ "\n\n")
     req, _ := http.NewRequest(method, serverUrl + path, strings.NewReader(data))

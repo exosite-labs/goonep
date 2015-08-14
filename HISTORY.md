@@ -1,6 +1,10 @@
 =======
 History
 =======
+0.3
+---
+- Default to HTTPS
+
 0.2
 ---
 
