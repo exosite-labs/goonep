@@ -1,14 +1,14 @@
 package goonep
 
-import ( 
+import (
 	"testing"
 	// "github.com/stretchr/testify/assert"
-	"strconv"
+	"encoding/json"
+	"fmt"
 	"math/rand"
-    "encoding/json"
-    "fmt"
-    "time"
-    "runtime"
+	"runtime"
+	"strconv"
+	"time"
 )
 
 var vendorname = "VENDORNAMEHERE"
@@ -34,160 +34,159 @@ var portalcik = "PORTALCIKHERE"
 
 }*/
 
-
 // errorCheckProvision checks for provisioning API HTTP errors
 func errorCheckProvision(t *testing.T, body string, err interface{}, line int) {
-    if err != nil {
-        t.Errorf("Failed: %v", err)
-    }
-    if body == "HTTP/1.1 409 Conflict\r\n" || body == "HTTP/1.1 404 Not Found\r\n" || body == "HTTP/1.1 412 Precondition Failed\r\n" {
-        t.Errorf("Failed: %v", "HTTP status error on line " + strconv.Itoa(line+1))
-    }
+	if err != nil {
+		t.Errorf("Failed: %v", err)
+	}
+	if body == "HTTP/1.1 409 Conflict\r\n" || body == "HTTP/1.1 404 Not Found\r\n" || body == "HTTP/1.1 412 Precondition Failed\r\n" {
+		t.Errorf("Failed: %v", "HTTP status error on line "+strconv.Itoa(line+1))
+	}
 }
 
 func TestMainProvision(t *testing.T) {
 	rand.Seed(time.Now().Unix())
-	randomInt := rand.Intn(10000000 - 0) + 0
+	randomInt := rand.Intn(10000000-0) + 0
 	var model = "MyTestModel" + strconv.Itoa(randomInt)
 	var sn1 = "001" + strconv.Itoa(randomInt)
 	var sn2 = "002" + strconv.Itoa(randomInt)
 	var sn3 = "003" + strconv.Itoa(randomInt)
 
-	portalrid, err := lookup(portalcik, "alias", "")
+	portalrid, err := Lookup(portalcik, "alias", "")
 	_, _, line, _ := runtime.Caller(0)
-    errorCheckRPC(t, portalrid, err, line)
-    portalridBody := portalrid.Results[0].Body
-    fmt.Printf("portalrid: " + portalridBody.(string) + "\n\n")
+	errorCheckRPC(t, portalrid, err, line)
+	portalridBody := portalrid.Results[0].Body
+	fmt.Printf("portalrid: " + portalridBody.(string) + "\n\n")
 
-    clonerid, err := lookup(clonecik, "alias", "")
-    _, _, line, _ = runtime.Caller(0)
-    errorCheckRPC(t, clonerid, err, line)
-    cloneridBody := clonerid.Results[0].Body
-    fmt.Printf("clonerid: " + cloneridBody.(string) + "\n\n")
+	clonerid, err := Lookup(clonecik, "alias", "")
+	_, _, line, _ = runtime.Caller(0)
+	errorCheckRPC(t, clonerid, err, line)
+	cloneridBody := clonerid.Results[0].Body
+	fmt.Printf("clonerid: " + cloneridBody.(string) + "\n\n")
 
-    var meta = map[string]interface{}{
-            "meta": "[\"" + vendorname + "\", \"" + model + "\"]",
-    }
-    sharecode, err := share(cloneportalcik, cloneridBody, meta)
-    _, _, line, _ = runtime.Caller(0)
-    errorCheckRPC(t, sharecode, err, line)
-    sharecodeBody := sharecode.Results[0].Body
+	var meta = map[string]interface{}{
+		"meta": "[\"" + vendorname + "\", \"" + model + "\"]",
+	}
+	sharecode, err := Share(cloneportalcik, cloneridBody, meta)
+	_, _, line, _ = runtime.Caller(0)
+	errorCheckRPC(t, sharecode, err, line)
+	sharecodeBody := sharecode.Results[0].Body
 
-    provModel := ProvModel{
-    	managebycik: false,
-    	managebysharecode: true,
-    	url: "https://m2.exosite.com",
-    }
-    body, err := model_create(provModel, vendortoken, model, sharecodeBody.(string), false, true, true)
-    fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
-    _, _, line, _ = runtime.Caller(0)
-    errorCheckProvision(t, string(body.([]byte)), err, line)
+	provModel := ProvModel{
+		managebycik:       false,
+		managebysharecode: true,
+		url:               "https://m2.exosite.com",
+	}
+	body, err := Model_create(provModel, vendortoken, model, sharecodeBody.(string), false, true, true)
+	fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
+	_, _, line, _ = runtime.Caller(0)
+	errorCheckProvision(t, string(body.([]byte)), err, line)
 
-    body, err = model_list(provModel, vendortoken)
-    fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
-    _, _, line, _ = runtime.Caller(0)
-    errorCheckProvision(t, string(body.([]byte)), err, line)
+	body, err = Model_list(provModel, vendortoken)
+	fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
+	_, _, line, _ = runtime.Caller(0)
+	errorCheckProvision(t, string(body.([]byte)), err, line)
 
-    body, err = model_info(provModel, vendortoken, model)
-    fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
-    _, _, line, _ = runtime.Caller(0)
-    errorCheckProvision(t, string(body.([]byte)), err, line)
+	body, err = Model_info(provModel, vendortoken, model)
+	fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
+	_, _, line, _ = runtime.Caller(0)
+	errorCheckProvision(t, string(body.([]byte)), err, line)
 
-    body, err = serialnumber_add(provModel, vendortoken, model, sn1)
-    fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
-    _, _, line, _ = runtime.Caller(0)
-    errorCheckProvision(t, string(body.([]byte)), err, line)
+	body, err = Serialnumber_add(provModel, vendortoken, model, sn1)
+	fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
+	_, _, line, _ = runtime.Caller(0)
+	errorCheckProvision(t, string(body.([]byte)), err, line)
 
-   	var sn2andsn3 = []string{sn2, sn3}
-   	body, err = serialnumber_add_batch(provModel, vendortoken, model, sn2andsn3)
-   	fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
-    _, _, line, _ = runtime.Caller(0)
-    errorCheckProvision(t, string(body.([]byte)), err, line)
+	var sn2andsn3 = []string{sn2, sn3}
+	body, err = Serialnumber_add_batch(provModel, vendortoken, model, sn2andsn3)
+	fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
+	_, _, line, _ = runtime.Caller(0)
+	errorCheckProvision(t, string(body.([]byte)), err, line)
 
-   	body, err = serialnumber_list(provModel, vendortoken, model, 0, 10)
-   	fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
-    _, _, line, _ = runtime.Caller(0)
-    errorCheckProvision(t, string(body.([]byte)), err, line)
+	body, err = Serialnumber_list(provModel, vendortoken, model, 0, 10)
+	fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
+	_, _, line, _ = runtime.Caller(0)
+	errorCheckProvision(t, string(body.([]byte)), err, line)
 
-   	body, err = serialnumber_remove_batch(provModel, vendortoken, model, sn2andsn3)
-   	fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
-    _, _, line, _ = runtime.Caller(0)
-    errorCheckProvision(t, string(body.([]byte)), err, line)
+	body, err = Serialnumber_remove_batch(provModel, vendortoken, model, sn2andsn3)
+	fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
+	_, _, line, _ = runtime.Caller(0)
+	errorCheckProvision(t, string(body.([]byte)), err, line)
 
-   	body, err = serialnumber_list(provModel, vendortoken, model, 0, 1000)
-   	fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
-    _, _, line, _ = runtime.Caller(0)
-    errorCheckProvision(t, string(body.([]byte)), err, line)
+	body, err = Serialnumber_list(provModel, vendortoken, model, 0, 1000)
+	fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
+	_, _, line, _ = runtime.Caller(0)
+	errorCheckProvision(t, string(body.([]byte)), err, line)
 
-   	body, err = serialnumber_enable(provModel, vendortoken, model, sn1, portalridBody.(string))
-   	fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
-    _, _, line, _ = runtime.Caller(0)
-    errorCheckProvision(t, string(body.([]byte)), err, line)
+	body, err = Serialnumber_enable(provModel, vendortoken, model, sn1, portalridBody.(string))
+	fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
+	_, _, line, _ = runtime.Caller(0)
+	errorCheckProvision(t, string(body.([]byte)), err, line)
 
-   	body, err = serialnumber_info(provModel, vendortoken, model, sn1)
-   	fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
-    _, _, line, _ = runtime.Caller(0)
-    errorCheckProvision(t, string(body.([]byte)), err, line)
+	body, err = Serialnumber_info(provModel, vendortoken, model, sn1)
+	fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
+	_, _, line, _ = runtime.Caller(0)
+	errorCheckProvision(t, string(body.([]byte)), err, line)
 
-   	body, err = serialnumber_disable(provModel, vendortoken, model, sn1)
-   	fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
-    _, _, line, _ = runtime.Caller(0)
-    errorCheckProvision(t, string(body.([]byte)), err, line)
+	body, err = Serialnumber_disable(provModel, vendortoken, model, sn1)
+	fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
+	_, _, line, _ = runtime.Caller(0)
+	errorCheckProvision(t, string(body.([]byte)), err, line)
 
-   	body, err = serialnumber_info(provModel, vendortoken, model, sn1)
-   	fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
-    _, _, line, _ = runtime.Caller(0)
-    errorCheckProvision(t, string(body.([]byte)), err, line)
+	body, err = Serialnumber_info(provModel, vendortoken, model, sn1)
+	fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
+	_, _, line, _ = runtime.Caller(0)
+	errorCheckProvision(t, string(body.([]byte)), err, line)
 
-   	body, err = serialnumber_reenable(provModel, vendortoken, model, sn1)
-   	fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
-    _, _, line, _ = runtime.Caller(0)
-    errorCheckProvision(t, string(body.([]byte)), err, line)
+	body, err = Serialnumber_reenable(provModel, vendortoken, model, sn1)
+	fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
+	_, _, line, _ = runtime.Caller(0)
+	errorCheckProvision(t, string(body.([]byte)), err, line)
 
-   	body, err = serialnumber_info(provModel, vendortoken, model, sn1)
-   	fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
-    _, _, line, _ = runtime.Caller(0)
-    errorCheckProvision(t, string(body.([]byte)), err, line)
+	body, err = Serialnumber_info(provModel, vendortoken, model, sn1)
+	fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
+	_, _, line, _ = runtime.Caller(0)
+	errorCheckProvision(t, string(body.([]byte)), err, line)
 
-   	body, err = serialnumber_activate(provModel, model, sn1, vendorname)
-   	fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
-    _, _, line, _ = runtime.Caller(0)
-    errorCheckProvision(t, string(body.([]byte)), err, line)
+	body, err = Serialnumber_activate(provModel, model, sn1, vendorname)
+	fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
+	_, _, line, _ = runtime.Caller(0)
+	errorCheckProvision(t, string(body.([]byte)), err, line)
 
-   	body, err = serialnumber_info(provModel, vendortoken, model, sn1)
-   	fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
-    _, _, line, _ = runtime.Caller(0)
-    errorCheckProvision(t, string(body.([]byte)), err, line)
+	body, err = Serialnumber_info(provModel, vendortoken, model, sn1)
+	fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
+	_, _, line, _ = runtime.Caller(0)
+	errorCheckProvision(t, string(body.([]byte)), err, line)
 
-   	body, err = content_create(provModel, vendortoken, model, "a.txt", "This is text", false)
-   	fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
-    _, _, line, _ = runtime.Caller(0)
-    errorCheckProvision(t, string(body.([]byte)), err, line)
+	body, err = Content_create(provModel, vendortoken, model, "a.txt", "This is text", false)
+	fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
+	_, _, line, _ = runtime.Caller(0)
+	errorCheckProvision(t, string(body.([]byte)), err, line)
 
-   	body, err = content_upload(provModel, vendortoken, model, "a.txt", "This is content data", "text/plain")
-   	fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
-    _, _, line, _ = runtime.Caller(0)
-    errorCheckProvision(t, string(body.([]byte)), err, line)
+	body, err = Content_upload(provModel, vendortoken, model, "a.txt", "This is content data", "text/plain")
+	fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
+	_, _, line, _ = runtime.Caller(0)
+	errorCheckProvision(t, string(body.([]byte)), err, line)
 
-   	body, err = content_list(provModel, vendortoken, model)
-   	fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
-    _, _, line, _ = runtime.Caller(0)
-    errorCheckProvision(t, string(body.([]byte)), err, line)
+	body, err = Content_list(provModel, vendortoken, model)
+	fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
+	_, _, line, _ = runtime.Caller(0)
+	errorCheckProvision(t, string(body.([]byte)), err, line)
 
-   	body, err = content_remove(provModel, vendortoken, model, "a.txt")
-   	fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
-    _, _, line, _ = runtime.Caller(0)
-    errorCheckProvision(t, string(body.([]byte)), err, line)
+	body, err = Content_remove(provModel, vendortoken, model, "a.txt")
+	fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
+	_, _, line, _ = runtime.Caller(0)
+	errorCheckProvision(t, string(body.([]byte)), err, line)
 
-   	body, err = model_remove(provModel, vendortoken, model)
-   	fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
-   	_, _, line, _ = runtime.Caller(0)
-    errorCheckProvision(t, string(body.([]byte)), err, line)
+	body, err = Model_remove(provModel, vendortoken, model)
+	fmt.Printf(string(body.([]byte)) + "\r\n\r\n")
+	_, _, line, _ = runtime.Caller(0)
+	errorCheckProvision(t, string(body.([]byte)), err, line)
 }
 
-func dump( o interface{}) {
+func dump(o interface{}) {
 
-    result, _ := json.Marshal(o)
+	result, _ := json.Marshal(o)
 
-    fmt.Printf("\n\n*****************************\nDump value: %s \n*****************************\n\n", string(result) )
+	fmt.Printf("\n\n*****************************\nDump value: %s \n*****************************\n\n", string(result))
 }
