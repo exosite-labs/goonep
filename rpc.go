@@ -5,9 +5,11 @@ package goonep
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	//"github.com/davecgh/go-spew/spew"
 	"io/ioutil"
 	"net/http"
-	// "fmt"
+	"strings"
 )
 
 var version = "0.2"
@@ -34,7 +36,7 @@ type Result struct {
 }
 
 // Call is a helper function that carries out HTTP requests for RPC API calls
-func Call(auth string, procedure string, arguments []interface{}) (Response, error) {
+func Call(auth interface{}, procedure string, arguments []interface{}) (Response, error) {
 	var calls = []interface{}{
 		map[string]interface{}{
 			"id":        1,
@@ -68,15 +70,14 @@ func CallMulti(auth interface{}, calls []interface{}) (Response, error) {
 	if InDev {
 		serverUrl = "https://m2-dev.exosite.com/onep:v1/rpc/process"
 	}
-
+	//fmt.Println(requestBody)
 	buf, _ := json.Marshal(requestBody)
+	//fmt.Println(string(buf))
 	requestBodyBuf := bytes.NewBuffer(buf)
-
 	req, err := http.NewRequest("POST", serverUrl, requestBodyBuf)
 	if err != nil {
 		return f, err
 	}
-
 	req.Header.Add("Content-Type", "application/json; charset=utf-8")
 	req.Header.Add("User-Agent", "goonep "+version)
 
@@ -89,34 +90,45 @@ func CallMulti(auth interface{}, calls []interface{}) (Response, error) {
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
+	//fmt.Println("Body: ", string(body))
 	if err != nil {
+		//fmt.Println(body)
+		//fmt.Println(err)
+		//panic(err)
 		return f, err
 	}
-
-	err2 := json.Unmarshal(body, &(f.Results))
-	if err2 != nil {
-		return f, err2
-	}
-
+	//fmt.Println("Inner body: ", string(body))
+	d := json.NewDecoder(strings.NewReader(string(body)))
+	d.UseNumber()
+	err2 := d.Decode(&(f.Results))
+	//err2 := json.Unmarshal(body, &(f.Results))
+	//fmt.Println("F:", f, " E: ", err2)
+	return f, err2
+	/*
+		if err2 != nil {
+			fmt.Println("Err2: ", err2)
+			//panic(err2)
+			return f, err2
+		}
+	*/
 	// uncomment to print response body (for debugging)
-	// fmt.Println()
-	// fmt.Println(string(body))
-	// fmt.Println()
-	// fmt.Println()
-	// fmt.Println()
+	//fmt.Println(string(body))
 
-	// log.Printf("%v\n", f)
-	// b, err := json.MarshalIndent(f, "", "  ")
-	// log.Printf("%v\n", bytes.NewBuffer(b))
+	//fmt.Printf("%v\n", f)
+	//b, err := json.MarshalIndent(f, "", "  ")
+	//if err != nil {
+	//	panic(err)
+	//}
+	//fmt.Printf("%v\n", bytes.NewBuffer(b))
 
 	// TODO: RPC error checking
 
-	return f, nil
+	//return f, nil
 }
 
 // the following functions implement the RPC APIs their names correspond to
 
-func Activate(auth string, codetype string, code string) (Response, error) {
+func Activate(auth interface{}, codetype string, code string) (Response, error) {
 	var arguments = []interface{}{
 		codetype,
 		code,
@@ -124,7 +136,7 @@ func Activate(auth string, codetype string, code string) (Response, error) {
 	return Call(auth, "activate", arguments)
 }
 
-func Create(auth string, ttype string, desc interface{}) (Response, error) {
+func Create(auth interface{}, ttype string, desc interface{}) (Response, error) {
 	var arguments = []interface{}{
 		ttype,
 		desc,
@@ -132,7 +144,7 @@ func Create(auth string, ttype string, desc interface{}) (Response, error) {
 	return Call(auth, "create", arguments)
 }
 
-func Deactivate(auth string, codetype string, code string) (Response, error) {
+func Deactivate(auth interface{}, codetype string, code string) (Response, error) {
 	var arguments = []interface{}{
 		codetype,
 		code,
@@ -140,21 +152,21 @@ func Deactivate(auth string, codetype string, code string) (Response, error) {
 	return Call(auth, "deactivate", arguments)
 }
 
-func Drop(auth string, rid interface{}) (Response, error) {
+func Drop(auth interface{}, rid interface{}) (Response, error) {
 	var arguments = []interface{}{
 		rid,
 	}
 	return Call(auth, "drop", arguments)
 }
 
-func Flush(auth string, rid interface{}) (Response, error) {
+func Flush(auth interface{}, rid interface{}) (Response, error) {
 	var arguments = []interface{}{
 		rid,
 	}
 	return Call(auth, "flush", arguments)
 }
 
-func Info(auth string, rid interface{}, options interface{}) (Response, error) {
+func Info(auth interface{}, rid interface{}, options interface{}) (Response, error) {
 	var arguments = []interface{}{
 		rid,
 		options,
@@ -162,14 +174,14 @@ func Info(auth string, rid interface{}, options interface{}) (Response, error) {
 	return Call(auth, "info", arguments)
 }
 
-func Listing(auth string, types interface{}) (Response, error) {
+func Listing(auth interface{}, types interface{}) (Response, error) {
 	var arguments = []interface{}{
 		types,
 	}
 	return Call(auth, "listing", arguments)
 }
 
-func Lookup(auth string, ttype string, alias string) (Response, error) {
+func Lookup(auth interface{}, ttype string, alias string) (Response, error) {
 	var arguments = []interface{}{
 		ttype,
 		alias,
@@ -178,33 +190,36 @@ func Lookup(auth string, ttype string, alias string) (Response, error) {
 }
 
 // oneMap implements the map RPC (name difference due to naming conflict)
-func OneMap(auth string, rid interface{}, alias string) (Response, error) {
+func OneMap(auth interface{}, rid interface{}, alias string) (Response, error) {
 	var arguments = []interface{}{
 		"alias",
 		rid,
 		alias,
 	}
+	fmt.Println("Map")
 	return Call(auth, "map", arguments)
 }
 
-func Read(auth string, rid interface{}, options interface{}) (Response, error) {
+func Read(auth interface{}, rid interface{}, options interface{}) (Response, error) {
 	var arguments = []interface{}{
 		rid,
 		options,
 	}
+	//fmt.Printf("\n\nIn GOPREAD!!\nReading\n\tAuth: %+v\n\tArgs: %+v\n", auth, arguments)
 	return Call(auth, "read", arguments)
 }
 
-func Record(auth string, rid interface{}, entries interface{}, options interface{}) (Response, error) {
+func Record(auth interface{}, rid interface{}, entries interface{}, options interface{}) (Response, error) {
 	var arguments = []interface{}{
 		rid,
 		entries,
 		options,
 	}
+	//fmt.Printf("Arguments: %+v", arguments)
 	return Call(auth, "record", arguments)
 }
 
-func Recordbatch(auth string, rid interface{}, entries interface{}) (Response, error) {
+func Recordbatch(auth interface{}, rid interface{}, entries interface{}) (Response, error) {
 	var arguments = []interface{}{
 		rid,
 		entries,
@@ -212,7 +227,7 @@ func Recordbatch(auth string, rid interface{}, entries interface{}) (Response, e
 	return Call(auth, "recordbatch", arguments)
 }
 
-func Revoke(auth string, codetype string, code string) (Response, error) {
+func Revoke(auth interface{}, codetype string, code string) (Response, error) {
 	var arguments = []interface{}{
 		codetype,
 		code,
@@ -220,7 +235,7 @@ func Revoke(auth string, codetype string, code string) (Response, error) {
 	return Call(auth, "revoke", arguments)
 }
 
-func Share(auth string, rid interface{}, options interface{}) (Response, error) {
+func Share(auth interface{}, rid interface{}, options interface{}) (Response, error) {
 	var arguments = []interface{}{
 		rid,
 		options,
@@ -228,7 +243,7 @@ func Share(auth string, rid interface{}, options interface{}) (Response, error) 
 	return Call(auth, "share", arguments)
 }
 
-func Unmap(auth string, alias string) (Response, error) {
+func Unmap(auth interface{}, alias string) (Response, error) {
 	var arguments = []interface{}{
 		"alias",
 		alias,
@@ -236,7 +251,7 @@ func Unmap(auth string, alias string) (Response, error) {
 	return Call(auth, "unmap", arguments)
 }
 
-func Update(auth string, rid interface{}, desc interface{}) (Response, error) {
+func Update(auth interface{}, rid interface{}, desc interface{}) (Response, error) {
 	var arguments = []interface{}{
 		rid,
 		desc,
@@ -244,7 +259,7 @@ func Update(auth string, rid interface{}, desc interface{}) (Response, error) {
 	return Call(auth, "update", arguments)
 }
 
-func Usage(auth string, rid interface{}, metric string, starttime int, endtime string) (Response, error) {
+func Usage(auth interface{}, rid interface{}, metric string, starttime int, endtime string) (Response, error) {
 	var arguments = []interface{}{
 		rid,
 		metric,
@@ -254,14 +269,14 @@ func Usage(auth string, rid interface{}, metric string, starttime int, endtime s
 	return Call(auth, "usage", arguments)
 }
 
-func Wait(auth string, rid interface{}) (Response, error) {
+func Wait(auth interface{}, rid interface{}) (Response, error) {
 	var arguments = []interface{}{
 		rid,
 	}
 	return Call(auth, "wait", arguments)
 }
 
-func Write(auth string, rid interface{}, value interface{}) (Response, error) {
+func Write(auth interface{}, rid interface{}, value interface{}) (Response, error) {
 	var arguments = []interface{}{
 		rid,
 		value,
@@ -269,7 +284,7 @@ func Write(auth string, rid interface{}, value interface{}) (Response, error) {
 	return Call(auth, "write", arguments)
 }
 
-func Writegroup(auth string, entries interface{}) (Response, error) {
+func Writegroup(auth interface{}, entries interface{}) (Response, error) {
 	var arguments = []interface{}{
 		entries,
 	}

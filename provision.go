@@ -3,7 +3,7 @@
 package goonep
 
 import (
-	"fmt"
+	//	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -160,7 +160,7 @@ func ProvCall(path, key, data, method string, managebycik bool, extra_headers ht
 	var serverUrl = ""
 	serverUrl = "https://m2.exosite.com"
 
-	fmt.Printf(serverUrl + path + "\n\n")
+	//fmt.Printf(serverUrl + path + "\n\n")
 	req, _ := http.NewRequest(method, serverUrl+path, strings.NewReader(data))
 	req.Header = extra_headers
 	if managebycik {
