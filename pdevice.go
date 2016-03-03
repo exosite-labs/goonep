@@ -31,7 +31,7 @@ type Pdevice struct{
 
    Description  struct {   
       Limits    struct {   
-         Client     int `json:"client,omitempty"`
+         Client     string `json:"client,omitempty"`
          Dataport       string `json:"dataport,omitempty"`
          Datarule       string `json:"datarule,omitempty"`
          Disk          string `json:"disk,omitempty"`
