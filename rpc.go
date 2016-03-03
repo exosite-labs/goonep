@@ -70,9 +70,7 @@ func CallMulti(auth interface{}, calls []interface{}) (Response, error) {
 	if InDev {
 		serverUrl = "https://m2-dev.exosite.com/onep:v1/rpc/process"
 	}
-	fmt.Println(requestBody)
 	buf, _ := json.Marshal(requestBody)
-	fmt.Println("1P call: ", string(buf))
 	requestBodyBuf := bytes.NewBuffer(buf)
 	req, err := http.NewRequest("POST", serverUrl, requestBodyBuf)
 	if err != nil {
@@ -90,19 +88,13 @@ func CallMulti(auth interface{}, calls []interface{}) (Response, error) {
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
-	fmt.Println("Body: ", string(body))
 	if err != nil {
-		//fmt.Println(body)
-		//fmt.Println(err)
-		//panic(err)
 		return f, err
 	}
-	fmt.Println("Inner body: ", string(body))
 	d := json.NewDecoder(strings.NewReader(string(body)))
 	d.UseNumber()
 	err2 := d.Decode(&(f.Results))
 	//err2 := json.Unmarshal(body, &(f.Results))
-	//fmt.Println("F:", f, " E: ", err2)
 	return f, err2
 	/*
 		if err2 != nil {
@@ -196,7 +188,6 @@ func OneMap(auth interface{}, rid interface{}, alias string) (Response, error) {
 		rid,
 		alias,
 	}
-	fmt.Println("Map")
 	return Call(auth, "map", arguments)
 }
 
