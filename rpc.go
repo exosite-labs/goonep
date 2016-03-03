@@ -5,7 +5,6 @@ package goonep
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	//"github.com/davecgh/go-spew/spew"
 	"io/ioutil"
 	"net/http"
