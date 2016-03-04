@@ -65,10 +65,11 @@ func CallMulti(auth interface{}, calls []interface{}) (Response, error) {
 	}
 
 	var serverUrl = ""
-	serverUrl = "https://" + ONEPHost + "/onep:v1/rpc/process"
+	serverUrl = "http://" + ONEPHost + "/onep:v1/rpc/process"
 	if InDev {
 		serverUrl = "https://m2-dev.exosite.com/onep:v1/rpc/process"
 	}
+
 	buf, _ := json.Marshal(requestBody)
 	requestBodyBuf := bytes.NewBuffer(buf)
 	req, err := http.NewRequest("POST", serverUrl, requestBodyBuf)
@@ -190,12 +191,21 @@ func OneMap(auth interface{}, rid interface{}, alias string) (Response, error) {
 	return Call(auth, "map", arguments)
 }
 
+func Query(auth interface{}, rid, filter, sel, options interface{}) (Response, error) {
+	var arguments = []interface{}{
+		rid,
+		filter,
+		sel,
+		options,
+	}
+	return Call(auth, "query", arguments)
+}
+
 func Read(auth interface{}, rid interface{}, options interface{}) (Response, error) {
 	var arguments = []interface{}{
 		rid,
 		options,
 	}
-	//fmt.Printf("\n\nIn GOPREAD!!\nReading\n\tAuth: %+v\n\tArgs: %+v\n", auth, arguments)
 	return Call(auth, "read", arguments)
 }
 
