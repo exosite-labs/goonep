@@ -1,14 +1,17 @@
 package goonep
 
 import (
+	"fmt"
+	"io/ioutil"
 	"math/rand"
+	"net/http"
 	"runtime"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 )
 
-var cik = "<CIK>"
 var alias = "X1"
 var alias2 = "X2"
 
@@ -23,6 +26,43 @@ func errorCheckRPC(t *testing.T, body Response, err interface{}, line int) {
 	if body.Results[0].Status == "badarg" {
 		t.Errorf("Failed: %v", "RPC status response was badarg on line "+strconv.Itoa(line+1))
 	}
+}
+
+// Determines whether a given string is a possible valid CIK or RID.
+//
+// Only checks whether it matches the format for a CIK or RID, not whether it actually
+// exists in 1P.
+func validCikRid(s string) bool {
+	if len(s) != 40 {
+		return false
+	}
+	validChars := "0123456789abcdef"
+	for _, b := range s {
+		if !strings.ContainsRune(validChars, b) {
+			return false
+		}
+	}
+	return true
+}
+
+// Returns a new temporary CIK to use for tests.
+func genCik() string {
+	resp, err := http.Get("https://cik.herokuapp.com")
+	if err != nil {
+		panic(fmt.Sprintf("Failed to generate CIK: %s", err.Error()))
+	}
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to read response body from CIK fountain: %s", err.Error()))
+	}
+
+	cik := string(body)
+	if !validCikRid(string(cik)) {
+		panic(fmt.Sprintf("Invalid CIK returned by CIK fountain: %s", cik))
+	}
+	return cik
 }
 
 func TestMainRPC(t *testing.T) {
@@ -44,6 +84,8 @@ func TestMainRPC(t *testing.T) {
 		},
 		"subscribe": nil,
 	}
+
+	var cik = genCik()
 
 	// lookup rid of alias X1, if doesn't exist then create + map
 	rid1, err := Lookup(cik, "alias", alias)
