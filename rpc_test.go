@@ -3,15 +3,13 @@ package goonep
 import (
 	"fmt"
 	"io/ioutil"
-	"math/rand"
 	"net/http"
-	"runtime"
 	"strconv"
 	"strings"
 	"testing"
-	"time"
 )
 
+var tCik string
 var alias = "X1"
 var alias2 = "X2"
 
@@ -47,6 +45,10 @@ func validCikRid(s string) bool {
 
 // Returns a new temporary CIK to use for tests.
 func genCik() string {
+	if tCik != "" {
+		return tCik
+	}
+
 	resp, err := http.Get("https://cik.herokuapp.com")
 	if err != nil {
 		panic(fmt.Sprintf("Failed to generate CIK: %s", err.Error()))
@@ -65,6 +67,40 @@ func genCik() string {
 	return cik
 }
 
+// TestCreate tests the creation of a dataport
+func TestCreate(t *testing.T) {
+	t.Parallel()
+
+	cik := genCik()
+	var desc = map[string]interface{}{
+		"format":     "integer",
+		"meta":       "",
+		"name":       "who is me",
+		"preprocess": []interface{}{},
+		"public":     false,
+		"retention": map[string]interface{}{
+			"count":    "infinity",
+			"duration": "infinity",
+		},
+		"subscribe": nil,
+	}
+	resp, err := Create(cik, "dataport", desc)
+	if err != nil {
+		t.Fatalf("Error creating dataport: %s", err.Error())
+	}
+	if len(resp.Results) != 1 {
+		t.Fatalf("Create response should be length 1 but got: %s", resp.Results)
+	}
+	rid, ok := resp.Results[0].Body.(string)
+	if !ok {
+		t.Fatalf("Non-string result returned for Create call: '%s'", resp.Results[0].Body)
+	}
+	if !validCikRid(rid) {
+		t.Fatalf("Invalid RID returned from Create: '%s'", rid)
+	}
+}
+
+/*
 func TestMainRPC(t *testing.T) {
 	var rid1 Response
 	var rid2 Response
@@ -178,3 +214,4 @@ func TestMainRPC(t *testing.T) {
 	_, _, line, _ = runtime.Caller(0)
 	errorCheckRPC(t, body, err, line)
 }
+*/
