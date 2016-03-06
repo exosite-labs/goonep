@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	//"github.com/davecgh/go-spew/spew"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strings"
 )
@@ -18,6 +19,27 @@ var InDev = false
 
 // Set this to, e.g., "m2.exosite.com" or "localhost:18393"
 var ONEPHost = "m2.exosite.com"
+
+type Onep struct {
+	RpcUrl string
+	Logger *log.Logger
+}
+
+func (onep *Onep) Create(auth interface{}, ttype string, desc interface{}) (Response, error) {
+	var arguments = []interface{}{
+		ttype,
+		desc,
+	}
+	return Call(auth, "create", arguments)
+}
+
+func NewOnep() *Onep {
+	logger := log.New(ioutil.Discard, "", log.LstdFlags)
+	return &Onep{
+		RpcUrl: "https://m2.exosite.com",
+		Logger: logger,
+	}
+}
 
 type Response struct {
 	Results []Result
@@ -126,14 +148,6 @@ func Activate(auth interface{}, codetype string, code string) (Response, error) 
 		code,
 	}
 	return Call(auth, "activate", arguments)
-}
-
-func Create(auth interface{}, ttype string, desc interface{}) (Response, error) {
-	var arguments = []interface{}{
-		ttype,
-		desc,
-	}
-	return Call(auth, "create", arguments)
 }
 
 func Deactivate(auth interface{}, codetype string, code string) (Response, error) {

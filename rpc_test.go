@@ -84,7 +84,8 @@ func TestCreate(t *testing.T) {
 		},
 		"subscribe": nil,
 	}
-	resp, err := Create(cik, "dataport", desc)
+	onep := NewOnep()
+	resp, err := onep.Create(cik, "dataport", desc)
 	if err != nil {
 		t.Fatalf("Error creating dataport: %s", err.Error())
 	}
