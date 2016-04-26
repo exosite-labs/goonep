@@ -48,7 +48,7 @@ type ProvModel struct {
 }
 
 func (m *ProvModel) GetPath() string {
-	return "manage/model"
+	return PROVISION_MANAGE_MODEL
 }
 
 // Find is a helper function for finding model with characteristics contained in string argument
@@ -66,7 +66,7 @@ func (m *ProvModel) Find(modelName, id string) ProvModel {
 	}
 
 	var headers = http.Header{}
-	result, err := ProvCall(m.GetPath()+"/"+modelName+"/"+id, VendorToken, "", "GET", false, headers)
+	result, err := ProvCall(m.GetPath()+modelName+"/"+id, VendorToken, "", "GET", false, headers)
 
 	if err != nil {
 		log.Printf("Finding model(id: %s) met some error %v", id, err)
