@@ -3,15 +3,17 @@
 package goonep
 
 import (
-	//	"fmt"
+	"errors"
+	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
+	// "net/http/httputil"
+	"log"
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
-	// "net/http/httputil"
 )
 
 var VendorToken = ""
@@ -24,9 +26,10 @@ var PROVISION_MANAGE_MODEL = PROVISION_MANAGE + "/model/"
 var PROVISION_MANAGE_CONTENT = PROVISION_MANAGE + "/content/"
 var PROVISION_REGISTER = PROVISION_BASE + "/register"
 
-var Pool struct {
-	Models map[string]*ProvModel
-}
+var Pool = struct {
+	sync.RWMutex
+	devices map[string]*ProvModel
+}{devices: make(map[string]*ProvModel)}
 
 type ProvContent struct{}
 
@@ -52,38 +55,59 @@ func (m *ProvModel) GetPath() string {
 }
 
 // Find is a helper function for finding model with characteristics contained in string argument
-func (m *ProvModel) Find(modelName, id string) ProvModel {
+func (m *ProvModel) Find(modelName, id string) (ProvModel, error) {
 
-	if Pool.Models[id] != nil {
-		return *Pool.Models[id]
+	// Lock access to the map to see if we have the requested ID currently stored
+	Pool.RLock()
+	device, ok := Pool.devices[id]
+	Pool.RUnlock()
+	if ok {
+		// Yes, return it
+		return *device, nil
 	}
 
+	log.Printf("ID %s/%s not in cache, fetching", modelName, id)
+
+	// No, create one to store if we can fetch it in
 	fetchedModel := ProvModel{}
 
-	if len(id) <= 0 {
-		log.Printf("Try find a non-sense ID: %d ", id)
-		return ProvModel{}
+	// Check for a bad id.
+	if len(id) == 0 {
+		e := errors.New(fmt.Sprintf("Zero length ID"))
+		return fetchedModel, e
 	}
 
 	var headers = http.Header{}
 	result, err := ProvCall(m.GetPath()+modelName+"/"+id, VendorToken, "", "GET", false, headers)
 
+	// Check for a bad provision call
 	if err != nil {
-		log.Printf("Finding model(id: %s) met some error %v", id, err)
-		return fetchedModel
+		e := errors.New(fmt.Sprintf("Error finding ID '%s': %v ", id, err))
+		return fetchedModel, e
 	}
 
 	rawData := strings.Trim(string(result.([]uint8)), "\r\n")
 
-	if rawData == "HTTP/1.1 404 Not Found" {
-		return fetchedModel
+	// Check if the call succeeded but didn't return data we can use
+	switch rawData {
+	case "HTTP/1.1 404 Not Found":
+		fallthrough
+	case "HTTP/1.1 412 Precondition Failed":
+		e := errors.New(fmt.Sprintf("Unexpected result finding ID '%s': %v", id, rawData))
+		return fetchedModel, e
 	}
 
+	// Everything looks good, create the device
 	fetchedModel.Parse(rawData)
 	fetchedModel.SN = id
 	fetchedModel.TimeStamp = time.Now().Unix()
 
-	return fetchedModel
+	// Write it to the map
+	Pool.Lock()
+	Pool.devices[id] = &fetchedModel
+	Pool.Unlock()
+
+	return fetchedModel, nil
 }
 
 func (m *ProvModel) Parse(RawData string) {
@@ -144,13 +168,13 @@ type ProvRestModel interface {
 	// GetPath retrive the URL path for each different models
 	GetPath() string
 
-	Create(attr *interface{}) Response
+	Create(attr *interface{}) (Response, error)
 
-	Find(id string) Response
-	All() Response
+	Find(id string) (Response, error)
+	All() (Response, error)
 
-	Update(attr *interface{}) Response
-	Delete(attr *interface{}) Response
+	Update(attr *interface{}) (Response, error)
+	Delete(attr *interface{}) (Response, error)
 }
 
 // ProvCall is a helper function that carries out HTTP requests for Provisioning API calls
