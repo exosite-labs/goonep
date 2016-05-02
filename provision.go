@@ -56,19 +56,7 @@ func (m *ProvModel) GetPath() string {
 
 // Find is a helper function for finding model with characteristics contained in string argument
 func (m *ProvModel) Find(modelName, id string) (ProvModel, error) {
-
-	// Lock access to the map to see if we have the requested ID currently stored
-	Pool.RLock()
-	device, ok := Pool.devices[id]
-	Pool.RUnlock()
-	if ok {
-		// Yes, return it
-		return *device, nil
-	}
-
-	log.Printf("ID %s/%s not in cache, fetching", modelName, id)
-
-	// No, create one to store if we can fetch it in
+	// Create one to store if we can fetch it in
 	fetchedModel := ProvModel{}
 
 	// Check for a bad id.
@@ -76,6 +64,22 @@ func (m *ProvModel) Find(modelName, id string) (ProvModel, error) {
 		e := errors.New(fmt.Sprintf("Zero length ID"))
 		return fetchedModel, e
 	}
+
+	// Create a key to use to index the map that consists of the id and the
+	// vendor token.  We may have the same id in different domains (e.g.
+	// production and developemnt) and we need unique pool item for each.
+	key := id + VendorToken
+
+	// Lock access to the map to see if we have the requested ID currently stored
+	Pool.RLock()
+	device, ok := Pool.devices[key]
+	Pool.RUnlock()
+	if ok {
+		// Yes, return it
+		return *device, nil
+	}
+
+	log.Printf("ID %s/%s not in cache, fetching", modelName, id)
 
 	var headers = http.Header{}
 	result, err := ProvCall(m.GetPath()+modelName+"/"+id, VendorToken, "", "GET", false, headers)
@@ -104,7 +108,7 @@ func (m *ProvModel) Find(modelName, id string) (ProvModel, error) {
 
 	// Write it to the map
 	Pool.Lock()
-	Pool.devices[id] = &fetchedModel
+	Pool.devices[key] = &fetchedModel
 	Pool.Unlock()
 
 	return fetchedModel, nil
